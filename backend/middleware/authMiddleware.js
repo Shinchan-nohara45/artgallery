@@ -7,10 +7,16 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 let serviceAccount;
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-} else {
-  serviceAccount = require("../serviceAccountKey.json");
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else {
+    serviceAccount = require("../serviceAccountKey.json");
+  }
+} catch (error) {
+  console.error("Firebase Service Account Setup Error:", error.message);
+  // We cannot proceed without credentials, but throwing here gives a better log than MODULE_NOT_FOUND
+  throw new Error("Missing Firebase Credentials! Set FIREBASE_SERVICE_ACCOUNT env var or provide 'backend/serviceAccountKey.json'.");
 }
 
 // Initialize Firebase Admin SDK
