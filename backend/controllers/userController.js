@@ -15,6 +15,9 @@ const getUserProfile = asyncHandler(async (req, res) => {
             email: user.email,
             isAdmin: user.isAdmin,
             imageUrl: user.imageUrl,
+            shippingAddress: user.shippingAddress,
+            billingAddress: user.billingAddress,
+            addresses: user.addresses,
         });
     } else {
         res.status(404);
@@ -37,6 +40,24 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             user.password = req.body.password; // Mongoose pre-save hook will hash this
         }
 
+        // Update addresses
+        if (req.body.shippingAddress) {
+            user.shippingAddress = req.body.shippingAddress;
+        }
+        if (req.body.billingAddress) {
+            user.billingAddress = req.body.billingAddress;
+        }
+
+        // Add new address to the list
+        if (req.body.newAddress) {
+            user.addresses.push(req.body.newAddress);
+            // If it's the first address or marked default, set as shipping/billing
+            if (user.addresses.length === 1 || req.body.newAddress.isDefault) {
+                user.shippingAddress = req.body.newAddress;
+                user.billingAddress = req.body.newAddress;
+            }
+        }
+
         // Handle profile image upload if present
         if (req.file) {
             try {
@@ -57,6 +78,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             email: updatedUser.email,
             isAdmin: updatedUser.isAdmin,
             imageUrl: updatedUser.imageUrl,
+            shippingAddress: updatedUser.shippingAddress,
+            billingAddress: updatedUser.billingAddress,
+            addresses: updatedUser.addresses,
             token: req.token, // Return the existing token, or re-issue if desired
         });
     } else {
@@ -127,6 +151,60 @@ const updateUser = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Get user favorites
+// @route   GET /api/users/favorites
+// @access  Private
+const getFavorites = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id).populate('favorites');
+    if (user) {
+        res.json(user.favorites);
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+// @desc    Add artwork to favorites
+// @route   POST /api/users/favorites/:id
+// @access  Private
+const addFavorite = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+    const artworkId = req.params.id;
+
+    if (user) {
+        if (user.favorites.includes(artworkId)) {
+            res.status(400);
+            throw new Error('Artwork already in favorites');
+        }
+
+        user.favorites.push(artworkId);
+        await user.save();
+        res.json({ message: 'Added to favorites' });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+// @desc    Remove artwork from favorites
+// @route   DELETE /api/users/favorites/:id
+// @access  Private
+const removeFavorite = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+    const artworkId = req.params.id;
+
+    if (user) {
+        user.favorites = user.favorites.filter(
+            (id) => id.toString() !== artworkId
+        );
+        await user.save();
+        res.json({ message: 'Removed from favorites' });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
 export {
     getUserProfile,
     updateUserProfile,
@@ -134,4 +212,7 @@ export {
     deleteUser,
     getUserById,
     updateUser,
+    getFavorites,
+    addFavorite,
+    removeFavorite,
 };

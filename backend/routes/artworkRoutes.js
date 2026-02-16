@@ -1,26 +1,37 @@
-import express from 'express';
-const router = express.Router();
+import express from "express";
 import {
-    getArtworks,
-    getArtworkById,
-    createArtwork,
-    updateArtwork,
-    deleteArtwork,
-    getArtworksByArtist,
-} from '../controllers/artworkController.js';
-import { protect, admin, artist } from '../middleware/authMiddleware.js';
-import { upload } from '../middleware/uploadMiddleware.js'; // For artwork image uploads
+  getArtworks,
+  getArtworkById,
+  createArtwork,
+  updateArtwork,
+  deleteArtwork,
+  getArtworksByArtist,
+  getArtworksByUserId, // ✅ import it
+} from "../controllers/artworkController.js";
+import { protect, admin, artist } from "../middleware/authMiddleware.js";
+import upload from "../middleware/uploadMiddleware.js";
 
-router.route('/')
-    .get(getArtworks)
-    .post(protect, artist, upload.single('artworkImage'), createArtwork); // Only authenticated artists can create
+const router = express.Router();
 
-router.route('/:id')
-    .get(getArtworkById)
-    .put(protect, artist, upload.single('artworkImage'), updateArtwork) // Artists (or admin) can update their artwork
-    .delete(protect, artist, deleteArtwork); // Artists (or admin) can delete their artwork
+// Fetch all artworks or create new one
+router.route("/")
+  .get(getArtworks)
+  .post(protect, upload.single("artworkImage"), createArtwork);
 
-router.route('/artist/:artistId')
-    .get(getArtworksByArtist); // Get artworks by a specific artist
+
+router.get("/user/:id", getArtworksByUserId); 
+
+// // ✅ fetch artworks by user (specific)
+// router.get("/user/:id", getUserArtworks);
+
+// Fetch/update/delete artwork by ID
+router
+  .route("/:id")
+  .get(getArtworkById)
+  .put(protect, upload.single("artworkImage"), updateArtwork)
+  .delete(protect, deleteArtwork);
+
+// Fetch artworks by artist
+router.route("/artist/:artistId").get(getArtworksByArtist);
 
 export default router;

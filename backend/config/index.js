@@ -1,7 +1,9 @@
 // backend/config/index.js
-require('dotenv').config(); // Load environment variables first
 
-module.exports = {
+import dotenv from 'dotenv';
+dotenv.config(); // Load environment variables first
+
+const config = {
   PORT: process.env.PORT || 5000,
   MONGO_URI: process.env.MONGO_URI,
   JWT_SECRET: process.env.JWT_SECRET,
@@ -20,3 +22,5 @@ module.exports = {
   GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
   NODE_ENV: process.env.NODE_ENV
 };
+
+export default config;

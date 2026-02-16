@@ -1,6 +1,8 @@
 // backend/services/paymentService.js
-const stripe = require('stripe')(require('../config').STRIPE_SECRET_KEY);
-const config = require('../config');
+import Stripe from 'stripe';
+import config from '../config/index.js';
+
+const stripe = new Stripe(config.STRIPE_SECRET_KEY);
 
 // Function to create a Stripe Checkout Session
 const createCheckoutSession = async (orderItems, orderId, shippingInfo) => {
@@ -80,7 +82,7 @@ const verifyStripeWebhook = (rawBody, signature) => {
 };
 
 
-module.exports = {
+export {
   createCheckoutSession,
   verifyStripeWebhook,
 };

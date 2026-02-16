@@ -1,0 +1,17 @@
+# Node modules (both backend & frontend)
+node_modules/
+node_modules
+# Environment files
+.env
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+
+# IDE stuff
+.vscode/
+
+firebase-config.js

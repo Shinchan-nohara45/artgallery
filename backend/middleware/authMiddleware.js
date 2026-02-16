@@ -1,69 +1,72 @@
-// backend/middleware/authMiddleware.js
-const jwt = require('jsonwebtoken');
-const asyncHandler = require('express-async-handler'); // Simple wrapper for async functions to catch errors
-const User = require('../models/User');
-const config = require('../config');
+import jwt from "jsonwebtoken";
+import asyncHandler from "express-async-handler";
+import User from "../models/User.js";
+import admin from "firebase-admin";
+import { createRequire } from "module";
 
-// Middleware to protect routes
+const require = createRequire(import.meta.url);
+const serviceAccount = require("../serviceAccountKey.json");
+
+// Initialize Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
+
+// Protect routes (only logged-in users can access)
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization?.startsWith("Bearer")) {
     try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.split(" ")[1];
 
-      // Verify token
-      const decoded = jwt.verify(token, config.JWT_SECRET);
+      // First try JWT (for your own issued tokens)
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = await User.findById(decoded.id).select("-password");
+      } catch {
+        // If JWT fails, try Firebase
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        req.user = await User.findOne({ googleId: decodedToken.uid }).select("-password");
+      }
 
-      // Attach user to the request object (without password)
-      req.user = await User.findById(decoded.id).select('-password');
+      if (!req.user) {
+        res.status(401);
+        throw new Error("User not found");
+      }
 
       next();
     } catch (error) {
       console.error(error);
       res.status(401);
-      throw new Error('Not authorized, token failed');
+      throw new Error("Not authorized, token failed");
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401);
-    throw new Error('Not authorized, no token');
+    throw new Error("Not authorized, no token");
   }
 });
 
-// Middleware for admin routes
-const admin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
+// Admin middleware
+const adminOnly = (req, res, next) => {
+  if (req.user?.isAdmin) {
     next();
   } else {
-    res.status(401);
-    throw new Error('Not authorized as an admin');
+    res.status(403);
+    throw new Error("Not authorized as an admin");
   }
 };
 
-// Middleware for artist routes
-const artist = (req, res, next) => {
-  if (req.user && (req.user.isArtist || req.user.isAdmin)) { // Admins can also act as artists
+// Artist middleware
+const artistOnly = (req, res, next) => {
+  if (req.user?.isArtist) {
     next();
   } else {
-    res.status(401);
-    throw new Error('Not authorized as an artist');
+    res.status(403);
+    throw new Error("Not authorized as an artist");
   }
 };
 
-
-module.exports = { protect, admin, artist };
-
-// Helper to handle async errors in controllers (can be placed in utils or a separate file)
-// utils/asyncHandler.js (or directly in authMiddleware as done here)
-// This is a simple version, for more robust error handling, consider 'express-async-handler' package
-function asyncHandler(fn) {
-  return (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-}
+export { protect, adminOnly as admin, artistOnly as artist };

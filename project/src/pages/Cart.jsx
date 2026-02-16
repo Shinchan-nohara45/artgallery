@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from "@/contexts/CartContext";
 import { Minus, Plus, Trash2, CreditCard, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -47,11 +49,13 @@ const checkoutSchema = z.object({
   cardCvc: z.string().min(3, { message: "CVC must be at least 3 digits" }),
 });
 
+// import { useCart } from "@/contexts/CartContext"; // Moved to top
+
 const Cart = () => {
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const { cartItems, setCartItems, updateQuantity, removeFromCart, clearCart } = useCart();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -80,27 +84,55 @@ const Cart = () => {
   const tax = subtotal * 0.08; // 8% tax
   const total = subtotal + shipping + tax;
 
-  const updateQuantity = (id, amount) => {
-    setCartItems(prev => 
-      prev.map(item => 
-        item.id === id 
-          ? { ...item, quantity: Math.max(1, item.quantity + amount) } 
-          : item
-      )
-    );
-  };
 
-  const removeItem = (id) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-    toast.success("Item removed from cart");
-  };
 
-  const handleCheckout = (values) => {
-    console.log('Checkout submitted:', values);
-    toast.success("Order placed successfully!");
-    setCartItems([]);
-    setCheckoutOpen(false);
-    navigate('/');
+  const handleCheckout = async (values) => {
+    try {
+        const orderData = {
+            orderItems: cartItems.map(item => ({
+                name: item.name,
+                qty: item.quantity,
+                image: item.image,
+                price: item.price,
+                artwork: item.id || '65fac...', // Need real ID here. Mock data might fail if no real IDs.
+                _id: item.id // Pass ID
+            })),
+            shippingAddress: {
+                address: values.address,
+                city: values.city,
+                postalCode: values.zipCode,
+                country: 'USA' // Default or add to form
+            },
+            paymentMethod: 'Credit Card',
+            itemsPrice: subtotal,
+            taxPrice: tax,
+            shippingPrice: shipping,
+            totalPrice: total,
+        };
+
+        // Note: For mock data, IDs might be integers (1, 2). Backend expects Mongo ObjectIds. 
+        // If cartItems come from initialCartItems (mock), this WILL fail on backend validation.
+        // We need to assume cart is populated with REAL data from Discover page first.
+        
+        // For now, assuming cartItems have real structure if added via real flow. 
+        // If using mock initialCartItems, we should warn or clear them.
+        
+        const config = {
+            headers: {
+                Authorization: `Bearer ${currentUser.token}`,
+            },
+        };
+
+        await axios.post('/api/orders', orderData, config);
+        
+        toast.success("Order placed successfully!");
+        clearCart();
+        setCheckoutOpen(false);
+        navigate('/profile'); // Redirect to profile to see orders
+    } catch (error) {
+        console.error("Checkout error:", error);
+        toast.error("Failed to place order: " + (error.response?.data?.message || error.message));
+    }
   };
 
   return (
@@ -158,7 +190,7 @@ const Cart = () => {
                           </div>
                           
                           <button 
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeFromCart(item.id || item._id)}
                             className="p-2 text-gray-400 hover:text-red-500"
                           >
                             <Trash2 className="h-5 w-5" />

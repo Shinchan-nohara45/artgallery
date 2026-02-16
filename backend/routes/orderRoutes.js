@@ -1,5 +1,4 @@
 import express from 'express';
-const router = express.Router();
 import {
     addOrderItems,
     getOrderById,
@@ -7,23 +6,29 @@ import {
     updateOrderToDelivered,
     getMyOrders,
     getOrders,
+    getOrdersByUserId, // ✅ import controller
 } from '../controllers/orderController.js';
+
 import { protect, admin } from '../middleware/authMiddleware.js';
 
+const router = express.Router();
+
 router.route('/')
-    .post(protect, addOrderItems) // Create new order
-    .get(protect, admin, getOrders); // Admin can get all orders
+    .post(protect, addOrderItems)
+    .get(protect, admin, getOrders);
 
 router.route('/myorders')
-    .get(protect, getMyOrders); // Get logged-in user's orders
+    .get(protect, getMyOrders);
+
+router.get('/user/:id', protect, getOrdersByUserId); // ✅ fixed
 
 router.route('/:id')
-    .get(protect, getOrderById); // Get a specific order by ID (protected to owner/admin)
+    .get(protect, getOrderById);
 
 router.route('/:id/pay')
-    .put(protect, updateOrderToPaid); // Mark order as paid
+    .put(protect, updateOrderToPaid);
 
 router.route('/:id/deliver')
-    .put(protect, admin, updateOrderToDelivered); // Admin can mark order as delivered
+    .put(protect, admin, updateOrderToDelivered);
 
 export default router;

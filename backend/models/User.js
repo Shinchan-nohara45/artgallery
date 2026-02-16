@@ -1,52 +1,95 @@
 // backend/models/User.js
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
     },
+
     email: {
       type: String,
       required: true,
       unique: true,
     },
+
     password: {
       type: String,
-      required: function() {
-        // Password is not required if user signed up with Google
-        return !this.googleId;
+      required: function () {
+        // Password is not required if user signed up with Google or Firebase
+        return !this.googleId && !this.firebaseUid;
       },
     },
+
     isAdmin: {
       type: Boolean,
       required: true,
       default: false,
     },
+
     isArtist: {
       type: Boolean,
       default: false,
     },
-    googleId: { // To track users signed up with Google
+
+    googleId: {
       type: String,
       unique: true,
-      sparse: true, // Allows multiple null values
+      sparse: true,
     },
+
+    firebaseUid: {
+      type: String,
+      unique: true,
+      sparse: true, // allows null/undefined but enforces uniqueness when set
+    },
+
     profilePicture: {
-      type: String, // URL to Cloudinary image
-      default: 'https://res.cloudinary.com/your_cloud_name/image/upload/v1/default-profile.png' // Default placeholder
+      type: String,
+      default:
+        "https://res.cloudinary.com/your_cloud_name/image/upload/v1/default-profile.png",
     },
+
     bio: {
       type: String,
       maxlength: 500,
     },
+
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Artwork",
+      },
+    ],
     socialLinks: [
       {
         platform: String,
         url: String,
       },
+    ],
+    shippingAddress: {
+      address: { type: String },
+      city: { type: String },
+      postalCode: { type: String },
+      country: { type: String },
+    },
+    billingAddress: {
+      address: { type: String },
+      city: { type: String },
+      postalCode: { type: String },
+      country: { type: String },
+    },
+    addresses: [
+      {
+        label: { type: String }, // Home, Work, Other
+        address: { type: String },
+        city: { type: String },
+        postalCode: { type: String },
+        country: { type: String },
+        isDefault: { type: Boolean, default: false }
+      }
     ],
   },
   {
@@ -54,23 +97,25 @@ const userSchema = mongoose.Schema(
   }
 );
 
-// Encrypt password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password') || this.googleId) { // Only hash if password is modified and not a Google user
-    next();
+// Encrypt password before saving (skip for Google/Firebase users)
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || this.googleId || this.firebaseUid) {
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Compare entered password with hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  if (this.googleId) { // Google users don't have a password to match
+  // Firebase/Google users don’t use local passwords
+  if (this.googleId || this.firebaseUid) {
     return false;
   }
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
-module.exports = User;
+export default User;

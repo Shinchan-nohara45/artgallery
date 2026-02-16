@@ -24,12 +24,14 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				artbloom: {
-					cream: '#FEF7E5',
-					brown: '#8B7163',
+					cream: '#F2EFD9', //#FEF7E5
+					brown: '#6D4C41',
 					gold: '#D4AF37',
+					white: '#FFFFFF',
 					sage: '#C3C9A3',
 					peach: '#FFE0C8',
 					charcoal: '#3A3A3A'
+					//footerBrown: "#6D4C41"
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',

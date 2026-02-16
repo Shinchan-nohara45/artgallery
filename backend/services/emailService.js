@@ -1,7 +1,7 @@
 // backend/services/emailService.js
-const nodemailer = require('nodemailer');
-const { google } = require('googleapis');
-const config = require('../config');
+import nodemailer from 'nodemailer';
+import { google } from 'googleapis';
+import config from '../config/index.js';
 
 // Option 1: Using SMTP (e.g., Gmail with App Password)
 const transporter = nodemailer.createTransport({
@@ -112,7 +112,7 @@ const sendOrderConfirmationEmail = async (userEmail, userName, orderDetails) => 
 };
 
 
-module.exports = {
+export {
   sendMail,
   sendWelcomeEmail,
   sendOrderConfirmationEmail,

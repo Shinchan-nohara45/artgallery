@@ -1,12 +1,12 @@
 // backend/models/Artwork.js
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
-const artworkSchema = mongoose.Schema(
+const artworkSchema = new mongoose.Schema(
   {
-    user: {
+    artist: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User', // Artist who uploaded the artwork
+      ref: "User", // Artist who uploaded the artwork
     },
     title: {
       type: String,
@@ -19,14 +19,25 @@ const artworkSchema = mongoose.Schema(
       maxlength: 1000,
     },
     imageUrl: {
-      type: String, // URL from Cloudinary
+      type: String, // Cloudinary URL
       required: true,
+    },
+    cloudinaryId: {
+      type: String, // public_id from Cloudinary
     },
     category: {
       type: String,
       required: true,
-      enum: ['painting', 'sculpture', 'photography', 'digital_art', 'drawing', 'mixed_media', 'other'],
-      default: 'other',
+      enum: [
+        "painting",
+        "sculpture",
+        "photography",
+        "digital_art",
+        "drawing",
+        "mixed_media",
+        "other",
+      ],
+      default: "other",
     },
     price: {
       type: Number,
@@ -37,7 +48,7 @@ const artworkSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    stock: { // If selling physical prints/copies
+    stock: {
       type: Number,
       required: true,
       default: 1,
@@ -47,38 +58,19 @@ const artworkSchema = mongoose.Schema(
         user: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
-          ref: 'User',
+          ref: "User",
         },
-        name: {
-          type: String,
-          required: true,
-        },
-        rating: {
-          type: Number,
-          required: true,
-        },
-        comment: {
-          type: String,
-          required: true,
-        },
+        name: { type: String, required: true },
+        rating: { type: Number, required: true },
+        comment: { type: String, required: true },
       },
     ],
-    rating: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    numReviews: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
+    rating: { type: Number, required: true, default: 0 },
+    numReviews: { type: Number, required: true, default: 0 },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Artwork = mongoose.model('Artwork', artworkSchema);
+const Artwork = mongoose.model("Artwork", artworkSchema);
 
-module.exports = Artwork;
+export default Artwork;

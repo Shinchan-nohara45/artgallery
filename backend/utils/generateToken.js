@@ -1,6 +1,6 @@
 // backend/utils/generateToken.js
-const jwt = require('jsonwebtoken');
-const config = require('../config');
+import jwt from 'jsonwebtoken';
+import config from '../config/index.js';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, config.JWT_SECRET, {
@@ -8,4 +8,4 @@ const generateToken = (id) => {
   });
 };
 
-module.exports = generateToken;
+export { generateToken };

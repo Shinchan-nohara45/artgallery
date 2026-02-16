@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import { generateToken } from '../utils/generateToken.js';
 import asyncHandler from 'express-async-handler';
-import { sendVerificationEmail } from '../services/emailService.js';
+// import { sendVerificationEmail } from '../services/emailService.js';
 import bcrypt from 'bcryptjs';
 
 // @desc    Register a new user
@@ -21,6 +21,7 @@ const registerUser = asyncHandler(async (req, res) => {
         name,
         email,
         password, // Password will be hashed by the pre-save hook in User model
+        isArtist: true, // Allow new users to upload by default
     });
 
     if (user) {
@@ -72,8 +73,18 @@ const googleAuth = asyncHandler(async (req, res) => {
 
     if (user) {
         // If user exists, just log them in
+        let updated = false;
         if (!user.googleId) {
             user.googleId = googleId;
+            updated = true;
+        }
+        // Ensure existing users are artists (fix for upload authorization)
+        if (!user.isArtist) {
+            user.isArtist = true;
+            updated = true;
+        }
+        
+        if (updated) {
             await user.save();
         }
         res.json({
@@ -96,6 +107,7 @@ const googleAuth = asyncHandler(async (req, res) => {
             googleId,
             password: hashedPassword, // A strong generated password
             imageUrl,
+            isArtist: true, // Make Google users artists by default for now
         });
 
         if (user) {

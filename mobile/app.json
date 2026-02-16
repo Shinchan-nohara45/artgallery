@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Art Bloom",
+    "slug": "mobile",
+    "scheme": "artbloom",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Art-Bloom Logo.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/Art-Bloom Logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Art-Bloom Logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.artbloom.mobile",
+      "usesCleartextTraffic": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a7efc7a6-da5f-4bc9-9c7d-6a9bab6a6875"
+      }
+    }
+  }
+}

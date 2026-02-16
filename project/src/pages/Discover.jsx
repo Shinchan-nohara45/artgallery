@@ -1,14 +1,17 @@
-
-import React, { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Heart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import axios from 'axios';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from "@/components/ui/use-toast"; // Assuming Shadcn toast exists or use native
+import { useCart } from "@/contexts/CartContext";
+import { useNavigate } from "react-router-dom";
 
-// Sample art data
 const artCategories = [
   { id: 'all', name: 'All Categories' },
   { id: 'painting', name: 'Paintings' },
@@ -18,80 +21,80 @@ const artCategories = [
   { id: 'illustration', name: 'Illustrations' },
 ];
 
-const artworks = [
-  {
-    id: 1,
-    title: 'Abstract Dreams',
-    artist: 'Maria Rivera',
-    image: '/lovable-uploads/9338b940-6030-450a-b0bf-d771b2ed0641.png',
-    category: 'painting',
-    price: '$350',
-  },
-  {
-    id: 2,
-    title: 'Ocean Waves',
-    artist: 'Thomas Chen',
-    image: '/placeholder.svg',
-    category: 'photography',
-    price: '$220',
-  },
-  {
-    id: 3,
-    title: 'Digital Landscape',
-    artist: 'Alex Johnson',
-    image: '/placeholder.svg',
-    category: 'digital',
-    price: '$180',
-  },
-  {
-    id: 4,
-    title: 'Autumn Forest',
-    artist: 'Emma Wilson',
-    image: '/placeholder.svg',
-    category: 'painting',
-    price: '$420',
-  },
-  {
-    id: 5,
-    title: 'Urban Reflection',
-    artist: 'Michael Brown',
-    image: '/placeholder.svg',
-    category: 'photography',
-    price: '$290',
-  },
-  {
-    id: 6,
-    title: 'Modern Abstract',
-    artist: 'Sofia Garcia',
-    image: '/placeholder.svg',
-    category: 'painting',
-    price: '$380',
-  },
-  {
-    id: 7,
-    title: 'Character Design',
-    artist: 'David Park',
-    image: '/placeholder.svg',
-    category: 'illustration',
-    price: '$150',
-  },
-  {
-    id: 8,
-    title: 'Bronze Figure',
-    artist: 'Claire Adams',
-    image: '/placeholder.svg',
-    category: 'sculpture',
-    price: '$950',
-  },
-];
-
 const Discover = () => {
+  const { currentUser } = useAuth();
   const [activeCategory, setActiveCategory] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
+  const [artworks, setArtworks] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // const { toast } = useToast(); // If available
+  
+  const { addToCart, cartItems } = useCart();
+  const navigate = useNavigate();
+
+  const handleCartAction = (e, artwork) => {
+      e.stopPropagation();
+      const isInCart = cartItems.some(item => item._id === artwork._id || item.id === artwork._id);
+      if (isInCart) {
+          navigate('/cart');
+      } else {
+          addToCart(artwork);
+      }
+  };
+
+  const isItemInCart = (id) => cartItems.some(item => item._id === id || item.id === id);
+
+  useEffect(() => {
+    fetchArtworks();
+    if (currentUser) {
+        fetchFavorites();
+    }
+  }, [currentUser]);
+
+  const fetchArtworks = async () => {
+      try {
+          const { data } = await axios.get('/api/artworks');
+          setArtworks(data.artworks || []); // Assuming API returns object with artworks array or direct array
+      } catch (error) {
+          console.error("Error fetching artworks:", error);
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  const fetchFavorites = async () => {
+      try {
+          const { data } = await axios.get('/api/users/favorites');
+          setFavorites(data.map(fav => fav._id));
+      } catch (error) {
+          console.error("Error fetching favorites:", error);
+      }
+  };
+
+  const toggleFavorite = async (e, artworkId) => {
+      e.stopPropagation(); // Prevent card click
+      if (!currentUser) {
+          alert("Please login to save favorites"); // Or use toast
+          return;
+      }
+
+      try {
+          if (favorites.includes(artworkId)) {
+              await axios.delete(`/api/users/favorites/${artworkId}`);
+              setFavorites(prev => prev.filter(id => id !== artworkId));
+          } else {
+              await axios.post(`/api/users/favorites/${artworkId}`);
+              setFavorites(prev => [...prev, artworkId]);
+          }
+      } catch (error) {
+          console.error("Error toggling favorite:", error);
+      }
+  };
   
   const filteredArtworks = activeCategory === 'all' 
     ? artworks 
-    : artworks.filter(art => art.category === activeCategory);
+    : artworks.filter(art => (art.category || '').toLowerCase() === activeCategory);
 
   return (
     <div className="min-h-screen flex flex-col bg-artbloom-cream">
@@ -180,27 +183,46 @@ const Discover = () => {
           {/* Artwork Grid */}
           <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
             {filteredArtworks.map(artwork => (
-              <Card key={artwork.id} className={`overflow-hidden hover-lift transition-all ${viewMode === 'list' ? 'flex flex-row' : ''}`}>
+              <Card key={artwork._id} className={`overflow-hidden hover-lift transition-all relative group ${viewMode === 'list' ? 'flex flex-row' : ''}`}>
+                 {/* Favorite Button */}
+                 <button 
+                    onClick={(e) => toggleFavorite(e, artwork._id)}
+                    className="absolute top-3 right-3 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    title={favorites.includes(artwork._id) ? "Remove from favorites" : "Add to favorites"}
+                >
+                    <Heart 
+                        className={`w-5 h-5 transition-colors ${favorites.includes(artwork._id) ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} 
+                    />
+                </button>
+
                 <div className={viewMode === 'list' ? 'w-1/3' : ''}>
                   <img 
-                    src={artwork.image} 
+                    src={artwork.imageUrl} 
                     alt={artwork.title} 
                     className="w-full h-64 object-cover"
                   />
                 </div>
                 <CardContent className={`p-4 ${viewMode === 'list' ? 'w-2/3' : ''}`}>
                   <h3 className="font-playfair text-lg font-semibold mb-1">{artwork.title}</h3>
-                  <p className="text-artbloom-charcoal/70 text-sm">{artwork.artist}</p>
+                  <p className="text-artbloom-charcoal/70 text-sm">{artwork.artist?.name || "Unknown Artist"}</p>
+
                   <div className="flex justify-between items-center mt-3">
-                    <span className="font-medium">{artwork.price}</span>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      View Details
+                    <span className="font-medium">${artwork.price}</span>
+                    <Button 
+                        variant={isItemInCart(artwork._id) ? "default" : "outline"}
+                        size="sm" 
+                        className={`text-xs ${isItemInCart(artwork._id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                        onClick={(e) => handleCartAction(e, artwork)}
+                    >
+                      {isItemInCart(artwork._id) ? "Go to Cart" : "Add to Cart"}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          {loading && <div className="text-center py-10">Loading artworks...</div>}
           
           {/* Load More Button */}
           <div className="flex justify-center mt-12">

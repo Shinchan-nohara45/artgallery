@@ -1,0 +1,31 @@
+{
+    "cli": {
+        "version": ">= 0.52.0"
+    },
+    "build": {
+        "development": {
+            "developmentClient": true,
+            "distribution": "internal"
+        },
+        "preview": {
+            "distribution": "internal",
+            "android": {
+                "buildType": "apk"
+            },
+            "env": {
+                "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCgijDWtPMXtGWK8R1p4_vxpZejvYr-gG8",
+                "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "art-bloom.firebaseapp.com",
+                "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "art-bloom",
+                "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "art-bloom.firebasestorage.app",
+                "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "928306775993",
+                "EXPO_PUBLIC_FIREBASE_APP_ID": "1:928306775993:web:a91aea229c0cf50a979868",
+                "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-1YMLKGHP3Y",
+                "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "928306775993-9q732847923874928374.apps.googleusercontent.com"
+            }
+        },
+        "production": {}
+    },
+    "submit": {
+        "production": {}
+    }
+}

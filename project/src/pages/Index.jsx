@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
@@ -7,6 +6,25 @@ import Footer from '@/components/Footer';
 import { Paintbrush, Star, Users, ShoppingCart } from 'lucide-react';
 
 const Index = () => {
+  const [artworks, setArtworks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArtworks = async () => {
+      try {
+        const res = await fetch("/api/artworks"); // 👈 your backend route
+        const data = await res.json();
+        setArtworks(data);
+      } catch (error) {
+        console.error("Error fetching artworks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtworks();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -14,7 +32,7 @@ const Index = () => {
       <Features />
       
       {/* Gallery Section */}
-      <section className="py-20 px-4 bg-artbloom-peach/30">
+      <section className="py-20 px-4 bg-artbloom-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <span className="inline-block px-3 py-1 mb-4 text-sm font-medium text-artbloom-gold bg-white rounded-full">
@@ -28,36 +46,42 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div 
-                key={item}
-                className="glass-card rounded-xl overflow-hidden hover-lift"
-              >
-                <img
-                  src={`https://source.unsplash.com/random/600x400?art,painting&sig=${item}`}
-                  alt="Artwork"
-                  className="w-full h-64 object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2 text-artbloom-charcoal">
-                    Artwork Title {item}
-                  </h3>
-                  <p className="text-artbloom-charcoal/70 text-sm mb-4">
-                    By Artist Name
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-artbloom-gold">
-                      $149.99
-                    </span>
-                    <button className="px-3 py-1 text-sm bg-artbloom-gold/90 text-white rounded hover:bg-artbloom-gold transition-colors">
-                      View Details
-                    </button>
+          {loading ? (
+            <p className="text-center text-artbloom-charcoal/70">Loading artworks...</p>
+          ) : artworks.length === 0 ? (
+            <p className="text-center text-artbloom-charcoal/70">No artworks available yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {artworks.map((artwork) => (
+                <div 
+                  key={artwork.id}
+                  className="glass-card rounded-xl overflow-hidden hover-lift"
+                >
+                  <img
+                    src={artwork.imageUrl}
+                    alt={artwork.title}
+                    className="w-full h-64 object-cover"
+                  />
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold mb-2 text-artbloom-charcoal">
+                      {artwork.title}
+                    </h3>
+                    <p className="text-artbloom-charcoal/70 text-sm mb-4">
+                      By {artwork.artist}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-artbloom-gold">
+                        ${artwork.price}
+                      </span>
+                      <button className="px-3 py-1 text-sm bg-artbloom-gold/90 text-white rounded hover:bg-artbloom-gold transition-colors">
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <button className="px-6 py-3 bg-white text-artbloom-brown border border-artbloom-brown/30 font-medium rounded-md shadow-md hover:bg-artbloom-brown hover:text-white transition-all duration-300">
@@ -66,7 +90,7 @@ const Index = () => {
           </div>
         </div>
       </section>
-
+      
       {/* Stats Section */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
