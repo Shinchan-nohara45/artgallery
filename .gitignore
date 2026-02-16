@@ -19,3 +19,4 @@ firebase-config.js
 /backend/.env
 /mobile/.env
 .env
+backend/serviceAccountKey.json
