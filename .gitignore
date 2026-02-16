@@ -15,3 +15,7 @@ build/
 .vscode/
 
 firebase-config.js
+
+/backend/.env
+/mobile/.env
+.env

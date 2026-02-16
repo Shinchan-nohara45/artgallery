@@ -18,6 +18,7 @@ import connectDB from "./config/db.js";
 
 // Import config
 import config from "./config/index.js";
+import setupCronJob from "./utils/cron.js";
 
 dotenv.config();
 
