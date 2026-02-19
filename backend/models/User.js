@@ -15,6 +15,29 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
 
+    username: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null/undefined initially if needed, but we'll try to enforce it
+      minlength: 3,
+      maxlength: 30,
+      match: [/^[a-z0-9._-]+$/, 'Username can only contain lowercase letters, numbers, underscores, dots, and dashes.'],
+      validate: {
+        validator: function(v) {
+          // Check for single dash and single dot if acceptable, or just general "no consecutive"
+          // User asked: "single dash allowed and single dot(.)"
+          // Literal interpretation: max one dash and max one dot in the whole string?
+          // Let's assume lenient first: just preventing consecutive special chars is usually better UX.
+          // But if strict: (v.match(/\-/g) || []).length <= 1 && (v.match(/\./g) || []).length <= 1
+          if (!v) return true; // allow empty if sparse handling
+          const dashCount = (v.match(/-/g) || []).length;
+          const dotCount = (v.match(/\./g) || []).length;
+          return dashCount <= 1 && dotCount <= 1;
+        },
+        message: 'Username can contain at most one dash and one dot.'
+      }
+    },
+
     password: {
       type: String,
       required: function () {
@@ -51,6 +74,11 @@ const userSchema = new mongoose.Schema(
       default:
         "https://res.cloudinary.com/your_cloud_name/image/upload/v1/default-profile.png",
     },
+    
+    // Adding imageUrl to match controller usage
+    imageUrl: {
+        type: String,
+    },
 
     bio: {
       type: String,
@@ -61,6 +89,18 @@ const userSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Artwork",
+      },
+    ],
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
     socialLinks: [

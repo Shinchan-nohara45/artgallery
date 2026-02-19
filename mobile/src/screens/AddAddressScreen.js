@@ -100,7 +100,7 @@ const AddAddressScreen = () => {
         <SafeAreaView className="flex-1 bg-artbloom-cream">
             <View className="flex-row items-center p-4 bg-white shadow-sm z-10 w-full">
                 <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-                    <ArrowLeft size={24} color="#2C2C2C" />
+                    <ArrowLeft size={24} color="#000000ff" />
                 </TouchableOpacity>
                 <Text className="text-xl font-bold font-playfair text-artbloom-charcoal">Add New Address</Text>
             </View>
@@ -134,7 +134,7 @@ const AddAddressScreen = () => {
                     </View>
                 )}
 
-                {/* Form */}
+                {/* Form
                 {renderInput("Address", address, setAddress, "123 Main St")}
                 {renderInput("City", city, setCity, "New York")}
                 <View className="flex-row justify-between">
@@ -144,13 +144,13 @@ const AddAddressScreen = () => {
                         <View className="w-[48%]">
                         {renderInput("Country", country, setCountry, "USA")}
                         </View>
-                </View>
+                </View> */}
 
                 {/* Default Switch */}
                 <View className="flex-row items-center justify-between mb-8 bg-white p-4 rounded-lg shadow-sm">
                     <Text className="font-medium text-artbloom-charcoal">Set as default address?</Text>
                     <Switch
-                        trackColor={{ true: '#F2A684', false: '#D1D5DB' }}
+                        trackColor={{ true: '#dc5d21ff', false: '#D1D5DB' }}
                         thumbColor={isDefault ? '#FFFFFF' : '#F3F4F6'}
                         onValueChange={setIsDefault}
                         value={isDefault}

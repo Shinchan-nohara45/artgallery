@@ -39,7 +39,7 @@ const LoginScreen = () => {
 
                     <View className="space-y-4">
                         <View>
-                            <Text className="mb-2 font-medium text-artbloom-charcoal">Email</Text>
+                            <Text className="mb-2 font-medium text-black">Email</Text>
                             <TextInput
                                 className="w-full bg-white border border-gray-200 rounded-lg p-4 font-sans"
                                 placeholder="your.email@example.com"
@@ -51,7 +51,7 @@ const LoginScreen = () => {
                         </View>
 
                         <View>
-                            <Text className="mb-2 font-medium text-artbloom-charcoal">Password</Text>
+                            <Text className="mb-2 font-medium text-black">Password</Text>
                             <TextInput
                                 className="w-full bg-white border border-gray-200 rounded-lg p-4 font-sans"
                                 placeholder="••••••••"
@@ -62,7 +62,7 @@ const LoginScreen = () => {
                         </View>
 
                         <View className="items-center mt-4 mb-2">
-                             <Text className="text-gray-500">Or continue with</Text>
+                             <Text className="text-black">Or continue with</Text>
                         </View>
 
                         <TouchableOpacity

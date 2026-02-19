@@ -88,7 +88,7 @@ const OrdersScreen = () => {
     if (loading) {
         return (
             <SafeAreaView className="flex-1 bg-artbloom-cream justify-center items-center">
-                <ActivityIndicator size="large" color="#F2A684" />
+                <ActivityIndicator size="large" color="#eb7d4aff" />
             </SafeAreaView>
         );
     }

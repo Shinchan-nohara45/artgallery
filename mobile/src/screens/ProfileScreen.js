@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
 import { LogOut, User, Settings, ShoppingBag, Heart, ChevronRight, MapPin } from 'lucide-react-native';
@@ -48,6 +48,32 @@ const ProfileScreen = () => {
         );
     };
 
+    const [stats, setStats] = useState({ followers: 0, following: 0 });
+    
+    // Refresh stats when screen comes into focus
+    useFocusEffect(
+        React.useCallback(() => {
+            if (isAuthenticated && user) {
+                fetchUserStats();
+            }
+        }, [isAuthenticated, user])
+    );
+
+    const fetchUserStats = async () => {
+        try {
+            const [followersRes, followingRes] = await Promise.all([
+                axios.get(`${API_URL}/users/${user._id}/followers`),
+                axios.get(`${API_URL}/users/${user._id}/following`)
+            ]);
+            setStats({
+                followers: followersRes.data.length,
+                following: followingRes.data.length
+            });
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        }
+    };
+
     if (!isAuthenticated) {
         return (
             <SafeAreaView className="flex-1 bg-artbloom-cream items-center justify-center p-6">
@@ -73,17 +99,45 @@ const ProfileScreen = () => {
         <SafeAreaView className="flex-1 bg-artbloom-cream">
             <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Header Profile Info */}
-                <View className="bg-white p-6 mb-4 shadow-sm rounded-b-3xl items-center">
-                    <View className="h-24 w-24 bg-artbloom-clay/30 rounded-full items-center justify-center mb-4 overflow-hidden">
-                        {user?.imageUrl ? (
-                            <Image source={{ uri: user.imageUrl }} className="w-full h-full" resizeMode="cover" />
-                        ) : (
-                            <User size={40} color="#6B4C3E" />
-                        )}
+                <View className="bg-white p-6 mb-4 shadow-sm rounded-b-3xl">
+                    <View className="flex-row items-center justify-between">
+                        {/* Left Side: Info */}
+                        <View className="flex-1 mr-4">
+                            <Text className="text-2xl font-playfair font-bold text-artbloom-charcoal">{user?.name}</Text>
+                            {user?.username && <Text className="text-artbloom-peach font-medium mb-1">@{user.username}</Text>}
+                            <Text className="text-gray-500 mb-4">{user?.email}</Text>
+                            
+                            {/* Social Stats - Compact */}
+                            <View className="flex-row items-center space-x-6 gap-6 mb-4">
+                                <TouchableOpacity onPress={() => navigation.navigate('UserList', { type: 'followers', userId: user._id })}>
+                                    <Text className="font-bold text-lg text-artbloom-charcoal">{stats.followers}</Text>
+                                    <Text className="text-xs text-gray-500 uppercase tracking-wide">Followers</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => navigation.navigate('UserList', { type: 'following', userId: user._id })}>
+                                    <Text className="font-bold text-lg text-artbloom-charcoal">{stats.following}</Text>
+                                    <Text className="text-xs text-gray-500 uppercase tracking-wide">Following</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <TouchableOpacity 
+                                className="bg-gray-100 px-4 py-2 rounded-full self-start"
+                                onPress={() => navigation.navigate('EditProfile')}
+                            >
+                                <Text className="text-artbloom-charcoal font-medium">Edit Profile</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Right Side: Image */}
+                        <View className="h-24 w-24 bg-artbloom-clay/30 rounded-full items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                            {user?.imageUrl ? (
+                                <Image source={{ uri: user.imageUrl }} className="w-full h-full" resizeMode="cover" />
+                            ) : (
+                                <User size={40} color="#6B4C3E" />
+                            )}
+                        </View>
                     </View>
-                    <Text className="text-2xl font-playfair font-bold text-artbloom-charcoal">{user?.name}</Text>
-                    <Text className="text-gray-500 mb-2">{user?.email}</Text>
-                    {user?.isAdmin && <View className="bg-artbloom-gold/20 px-3 py-1 rounded-full"><Text className="text-artbloom-gold text-xs font-bold">Admin</Text></View>}
+
+                    {user?.isAdmin && <View className="bg-artbloom-gold/20 px-3 py-1 rounded-full mt-4 self-start"><Text className="text-artbloom-gold text-xs font-bold">Admin</Text></View>}
                 </View>
 
                 {/* Menu Items */}

@@ -64,6 +64,11 @@ const CheckoutScreen = ({ route }) => {
              return;
         }
 
+        if (!user || !user.token) {
+            Alert.alert('Error', 'User session invalid. Please login again.');
+            return;
+        }
+
         setLoading(true);
         try {
             // Construct order object

@@ -7,7 +7,7 @@ module.exports = {
       colors: {
         'artbloom-cream': '#F9F7F2',
         'artbloom-clay': '#E6D5B8',
-        'artbloom-peach': '#F2A684',
+        'artbloom-peach': '#eb7d4aff',
         'artbloom-charcoal': '#2C2C2C',
         'artbloom-brown': '#6B4C3E',
         'artbloom-gold': '#D4AF37',

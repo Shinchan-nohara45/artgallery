@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react-native';
 
 const RegisterScreen = () => {
     const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -14,7 +15,7 @@ const RegisterScreen = () => {
     const navigation = useNavigation();
 
     const handleRegister = async () => {
-        if (!name || !email || !password || !confirmPassword) {
+        if (!name || !email || !password || !confirmPassword || !username) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
         }
@@ -24,7 +25,7 @@ const RegisterScreen = () => {
             return;
         }
 
-        const result = await register(name, email, password);
+        const result = await register(name, email, password, username);
         if (result.success) {
              Alert.alert('Success', 'Account created successfully');
              // Navigation handled by AppNavigator
@@ -61,6 +62,18 @@ const RegisterScreen = () => {
                                 value={name}
                                 onChangeText={setName}
                             />
+                        </View>
+
+                        <View>
+                            <Text className="mb-2 font-medium text-artbloom-charcoal">Username</Text>
+                            <TextInput
+                                className="w-full bg-white border border-gray-200 rounded-lg p-4 font-sans"
+                                placeholder="johndoe"
+                                value={username}
+                                onChangeText={(text) => setUsername(text.toLowerCase())}
+                                autoCapitalize="none"
+                            />
+                            <Text className="text-xs text-gray-400 mt-1">Lowercase, numbers, underscores, single dot/dash.</Text>
                         </View>
 
                         <View>

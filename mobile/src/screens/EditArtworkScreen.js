@@ -30,7 +30,7 @@ const EditArtworkScreen = () => {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -100,7 +100,10 @@ const EditArtworkScreen = () => {
       );
 
       Alert.alert('Success', 'Artwork updated successfully', [
-        { text: 'OK', onPress: () => navigation.navigate('ManageUploads') }
+        { 
+            text: 'OK', 
+            onPress: () => navigation.navigate('MainTabs', { screen: 'ProfileTab' }) 
+        }
       ]);
     } catch (error) {
       console.error('Update error:', error);

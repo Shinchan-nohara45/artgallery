@@ -90,7 +90,7 @@ const ManageUploadsScreen = () => {
         <SafeAreaView className="flex-1 bg-artbloom-cream px-4">
              <View className="flex-row items-center mb-6 mt-2">
                 <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-                    <Text className="text-lg text-artbloom-charcoal">← Back</Text>
+                    <Text className="text-lg text-black">← Back</Text>
                 </TouchableOpacity>
                 <Text className="text-2xl font-playfair font-bold text-artbloom-charcoal">My Uploads</Text>
             </View>

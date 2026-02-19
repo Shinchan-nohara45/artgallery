@@ -3,7 +3,7 @@ import { View, Text, FlatList, Image, TouchableOpacity, Alert } from 'react-nati
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCart } from '../context/CartContext';
-import { Trash2, Minus, Plus } from 'lucide-react-native';
+import { Trash2, Minus, Plus, ShoppingBag } from 'lucide-react-native';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
 import { useAuth } from '../context/AuthContext';
@@ -57,11 +57,17 @@ const CartScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-artbloom-cream p-4">
-      <Text className="text-3xl font-playfair font-bold text-artbloom-charcoal mb-6">Shopping Cart</Text>
+      <View className="bg-white rounded-xl shadow-sm p-4 mb-6 items-center border border-gray-100">
+        <Text className="text-2xl font-playfair font-bold text-artbloom-charcoal">Shopping Cart</Text>
+      </View>
       
       {cartItems.length === 0 ? (
         <View className="flex-1 items-center justify-center">
-             <Text className="text-artbloom-charcoal/50 text-lg">Your cart is empty</Text>
+            <View className="bg-white rounded-2xl p-8 items-center justify-center shadow-sm w-64 h-64 border border-gray-100">
+                <ShoppingBag size={48} color="#eb7d4aff" className="mb-4 opacity-50" />
+                <Text className="text-xl font-playfair font-bold text-artbloom-charcoal mb-2">Your cart is empty</Text>
+                <Text className="text-gray-400 text-center text-sm">Please add something to make an order</Text>
+            </View>
         </View>
       ) : (
         <>

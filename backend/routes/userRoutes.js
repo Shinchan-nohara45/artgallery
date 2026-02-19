@@ -4,15 +4,21 @@ import {
     getUserProfile,
     updateUserProfile,
     getUsers,
+    getPublicUsers,
     deleteUser,
     getUserById,
     updateUser,
     getFavorites,
     addFavorite,
     removeFavorite,
+    followUser,
+    getFollowers,
+    getFollowing
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploadMiddleware.js'; // For profile image uploads
+
+router.route('/public').get(getPublicUsers);
 
 router.route('/')
     .get(protect, admin, getUsers); // Admin can get all users
@@ -27,6 +33,15 @@ router.route('/favorites')
 router.route('/favorites/:id')
     .post(protect, addFavorite)
     .delete(protect, removeFavorite);
+
+router.route('/:id/follow')
+    .post(protect, followUser);
+
+router.route('/:id/followers')
+    .get(getFollowers);
+
+router.route('/:id/following')
+    .get(getFollowing);
 
 router.route('/:id')
     .delete(protect, admin, deleteUser) // Admin can delete any user

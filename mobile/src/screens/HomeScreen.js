@@ -28,11 +28,14 @@ const CAROUSEL_IMAGES = [
   },
 ];
 
+import ImageViewing from "react-native-image-viewing";
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [featuredArtworks, setFeaturedArtworks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [values, setValues] = useState({ isVisible: false, index: 0 }); // State for lightbox
   const flatListRef = useRef(null);
 
   useEffect(() => {
@@ -113,7 +116,14 @@ const HomeScreen = () => {
   }).current;
 
   return (
-    <SafeAreaView className="flex-1 bg-artbloom-cream">
+    <SafeAreaView className="flex-1 bg-artbloom-cream" edges={['top']}>
+        {/* Header - Left Aligned, Cursive, White BG */}
+        <View className="bg-white pt-4 pb-4 px-6 border-b border-gray-50 shadow-sm z-10">
+            <Text className="font-playfair italic font-bold text-3xl text-artbloom-charcoal">
+                Art Bloom
+            </Text>
+        </View>
+
       <ScrollView>
         {/* Hero Carousel */}
         <View className="h-96 relative">
@@ -156,27 +166,64 @@ const HomeScreen = () => {
           ) : (
             <View className="flex-row flex-wrap justify-between">
               {featuredArtworks.length > 0 ? (
-                  featuredArtworks.map((artwork) => (
-                    <TouchableOpacity 
+                  featuredArtworks.map((artwork, index) => (
+                    <View 
                       key={artwork._id}
                       className="w-[48%] mb-4 bg-white rounded-lg shadow-sm overflow-hidden"
-                      onPress={() => navigation.navigate('ArtworkDetail', { id: artwork._id })}
                     >
-                      <Image 
-                        source={{ uri: artwork.imageUrl }} 
-                        className="w-full h-40"
-                        resizeMode="cover"
-                      />
-                      <View className="p-3">
+                      <TouchableOpacity onPress={() => {
+                          setValues({ isVisible: true, index });
+                      }}>
+                          <Image 
+                            source={{ uri: artwork.imageUrl }} 
+                            className="w-full h-40"
+                            resizeMode="cover"
+                          />
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        className="p-3"
+                        onPress={() => navigation.navigate('ArtworkDetail', { id: artwork._id })}
+                      >
                         <Text className="font-playfair font-bold text-artbloom-charcoal text-base" numberOfLines={1}>{artwork.title}</Text>
-                        <Text className="text-artbloom-charcoal/70 text-xs mb-1" numberOfLines={1}>by {artwork.artist?.name || 'Artist'}</Text>
-                        <Text className="font-bold text-artbloom-peach">${artwork.price}</Text>
-                      </View>
-                    </TouchableOpacity>
+                        <Text className="text-artbloom-charcoal/70 text-xs mb-1" numberOfLines={1}>
+                            by {artwork.artist?.username ? `@${artwork.artist.username}` : (artwork.artist?.name || 'Artist')}
+                        </Text>
+                        {/* Price hidden as requested */}
+                      </TouchableOpacity>
+                    </View>
                   ))
               ) : (
                   <Text className="text-center text-gray-500 w-full mt-4">No artworks found. Upload some to see them here!</Text>
               )}
+              
+              <ImageViewing
+                images={featuredArtworks.map(art => ({ uri: art.imageUrl }))}
+                imageIndex={values.index}
+                visible={values.isVisible}
+                onRequestClose={() => setValues({ ...values, isVisible: false })}
+                FooterComponent={({ imageIndex }) => {
+                    const currentArtwork = featuredArtworks[imageIndex];
+                    return (
+                    <View className="bg-black/90 mx-4 mb-8 p-4 rounded-xl items-center shadow-lg border border-gray-800">
+                        <Text className="text-white font-playfair font-bold text-xl mb-1 text-center">
+                            {currentArtwork?.title}
+                        </Text>
+                        <Text className="text-gray-400 text-sm mb-4">
+                            by {currentArtwork?.artist?.username ? `@${currentArtwork.artist.username}` : currentArtwork?.artist?.name}
+                        </Text>
+                        
+                        <TouchableOpacity 
+                            className="bg-artbloom-peach px-8 py-3 rounded-full w-full items-center"
+                            onPress={() => {
+                                setValues({ ...values, isVisible: false });
+                                navigation.navigate('ArtworkDetail', { id: currentArtwork?._id });
+                            }}
+                        >
+                            <Text className="text-white font-bold text-lg">Open</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}}
+              />
             </View>
           )}
         </View>

@@ -12,6 +12,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
         res.json({
             _id: user._id,
             name: user.name,
+            username: user.username,
             email: user.email,
             isAdmin: user.isAdmin,
             imageUrl: user.imageUrl,
@@ -38,6 +39,15 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         // If a new password is provided, hash it
         if (req.body.password) {
             user.password = req.body.password; // Mongoose pre-save hook will hash this
+        }
+
+        if (req.body.username) {
+            const usernameExists = await User.findOne({ username: req.body.username });
+            if (usernameExists && usernameExists._id.toString() !== user._id.toString()) {
+                res.status(400);
+                throw new Error('Username already taken');
+            }
+            user.username = req.body.username;
         }
 
         // Update addresses
@@ -75,6 +85,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         res.json({
             _id: updatedUser._id,
             name: updatedUser.name,
+            username: updatedUser.username,
             email: updatedUser.email,
             isAdmin: updatedUser.isAdmin,
             imageUrl: updatedUser.imageUrl,
@@ -83,6 +94,129 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             addresses: updatedUser.addresses,
             token: req.token, // Return the existing token, or re-issue if desired
         });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+import Notification from '../models/Notification.js';
+import Artwork from '../models/Artwork.js'; // Need this for aggregation
+
+// @desc    Get all users (Public - featured > 2 artworks OR search)
+// @route   GET /api/users/public
+// @access  Public
+const getPublicUsers = asyncHandler(async (req, res) => {
+    const keyword = req.query.search
+    ? {
+        $or: [
+          { name: { $regex: req.query.search, $options: 'i' } },
+          { username: { $regex: req.query.search, $options: 'i' } },
+        ],
+      }
+    : {};
+
+    // If searching, return all matching users (simple search)
+    if (req.query.search) {
+        const users = await User.find({ ...keyword }).select('_id name username imageUrl');
+        res.json(users);
+        return;
+    }
+
+    // Default: Featured Artists (uploaded > 2 artworks)
+    // Find users who have uploaded more than 2 artworks
+    // We can do this by aggregating Artworks grouped by artist
+    
+    const featuredArtists = await Artwork.aggregate([
+        {
+            $group: {
+                _id: "$artist",
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $match: {
+                count: { $gt: 2 }
+            }
+        }
+    ]);
+
+    const artistIds = featuredArtists.map(a => a._id);
+
+    const users = await User.find({ _id: { $in: artistIds } })
+        .select('_id name username imageUrl'); 
+    
+    res.json(users);
+});
+
+// @desc    Follow or Unfollow a user
+// @route   POST /api/users/:id/follow
+// @access  Private
+const followUser = asyncHandler(async (req, res) => {
+    const userToFollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.user._id);
+
+    if (!userToFollow || !currentUser) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    if (userToFollow._id.toString() === currentUser._id.toString()) {
+        res.status(400);
+        throw new Error('You cannot follow yourself');
+    }
+
+    // Check if already following
+    const isFollowing = currentUser.following.some(id => id.toString() === userToFollow._id.toString());
+
+    if (isFollowing) {
+        // Unfollow
+        currentUser.following = currentUser.following.filter(id => id.toString() !== userToFollow._id.toString());
+        userToFollow.followers = userToFollow.followers.filter(id => id.toString() !== currentUser._id.toString());
+        
+        await currentUser.save();
+        await userToFollow.save();
+        
+        res.json({ message: 'Unfollowed user', isFollowing: false });
+    } else {
+        // Follow
+        currentUser.following.push(userToFollow._id);
+        userToFollow.followers.push(currentUser._id);
+        
+        await currentUser.save();
+        await userToFollow.save();
+        
+        // Create Notification (only on follow)
+        await Notification.create({
+            recipient: userToFollow._id,
+            sender: currentUser._id,
+            type: 'follow'
+        });
+
+        res.json({ message: 'Followed user', isFollowing: true });
+    }
+});
+
+// @desc    Get user followers
+// @route   GET /api/users/:id/followers
+// @access  Public
+const getFollowers = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id).populate('followers', 'name username imageUrl');
+    if (user) {
+        res.json(user.followers);
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+// @desc    Get user following
+// @route   GET /api/users/:id/following
+// @access  Public
+const getFollowing = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id).populate('following', 'name username imageUrl');
+    if (user) {
+        res.json(user.following);
     } else {
         res.status(404);
         throw new Error('User not found');
@@ -209,10 +343,14 @@ export {
     getUserProfile,
     updateUserProfile,
     getUsers,
+    getPublicUsers,
     deleteUser,
     getUserById,
     updateUser,
     getFavorites,
     addFavorite,
     removeFavorite,
+    followUser,
+    getFollowers,
+    getFollowing
 };

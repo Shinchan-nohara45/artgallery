@@ -23,11 +23,18 @@ const AddressScreen = ({ route }) => {
     }, [isFocused]);
 
     const fetchAddresses = async () => {
+        if (!user) return;
         try {
-            const { data } = await axios.get(`${API_URL}/users/profile`);
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                },
+            };
+            const { data } = await axios.get(`${API_URL}/users/profile`, config);
             setAddresses(data.addresses || []);
         } catch (error) {
             console.error('Error fetching addresses:', error);
+            // Optional: Handle 401 specifically to logout or refresh?
         }
     };
 
@@ -40,7 +47,7 @@ const AddressScreen = ({ route }) => {
 
     const getIcon = (label) => {
         switch(label) {
-            case 'Home': return <Home size={20} color="#F2A684" />;
+            case 'Home': return <Home size={20} color="#dc5d21ff" />;
             case 'Work': return <Briefcase size={20} color="#3B82F6" />;
             default: return <MapPin size={20} color="#9CA3AF" />;
         }
@@ -69,7 +76,7 @@ const AddressScreen = ({ route }) => {
             )}
             {selectMode && (
                 <View className="bg-artbloom-peach/10 p-2 rounded-full">
-                   <Check size={16} color="#F2A684" />
+                   <Check size={16} color="#dc5d21ff" />
                 </View>
             )}
         </TouchableOpacity>
@@ -79,7 +86,7 @@ const AddressScreen = ({ route }) => {
         <SafeAreaView className="flex-1 bg-artbloom-cream">
             <View className="flex-row items-center p-4 bg-white shadow-sm z-10 w-full">
                 <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-                    <ArrowLeft size={24} color="#2C2C2C" />
+                    <ArrowLeft size={24} color="#000000ff" />
                 </TouchableOpacity>
                 <Text className="text-xl font-bold font-playfair text-artbloom-charcoal">
                     {selectMode ? 'Select Address' : 'My Addresses'}

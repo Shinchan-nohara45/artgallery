@@ -20,6 +20,9 @@ import AddressScreen from '../screens/AddressScreen';
 import AddAddressScreen from '../screens/AddAddressScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import OrderSuccessScreen from '../screens/OrderSuccessScreen';
+import UserProfileScreen from '../screens/UserProfileScreen';
+import UserListScreen from '../screens/UserListScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -32,8 +35,9 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: '#E6D5B8' },
-        tabBarActiveTintColor: '#F2A684',
+        tabBarActiveTintColor: '#dc5d21ff',
         tabBarInactiveTintColor: '#2C2C2C',
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tab.Screen 
@@ -101,6 +105,9 @@ function MainStack() {
       <Stack.Screen name="Address" component={AddressScreen} />
       <Stack.Screen name="AddAddress" component={AddAddressScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+      <Stack.Screen name="UserList" component={UserListScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="OrderSuccess" component={OrderSuccessScreen} options={{ headerShown: false, gestureEnabled: false }} />
     </Stack.Navigator>
   );
@@ -112,7 +119,7 @@ export default function AppNavigator() {
   if (loading) {
      return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#F2A684" />
+            <ActivityIndicator size="large" color="#dc5d21ff" />
         </View>
      );
   }

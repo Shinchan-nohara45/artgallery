@@ -13,8 +13,13 @@ const FavoritesScreen = () => {
     const [loading, setLoading] = useState(true);
 
     const fetchFavorites = async () => {
+        if (!user || !user.token) return; 
+
         try {
-            const response = await axios.get(`${API_URL}/users/favorites`);
+            const config = {
+                headers: { Authorization: `Bearer ${user.token}` }
+            };
+            const response = await axios.get(`${API_URL}/users/favorites`, config);
             setFavorites(response.data);
         } catch (error) {
             console.error('Error fetching favorites:', error);

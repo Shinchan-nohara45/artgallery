@@ -135,7 +135,7 @@ const UploadScreen = () => {
                         <Text className="mb-2 font-medium text-artbloom-charcoal">Category</Text>
                         <TextInput
                             className="w-full bg-white border border-gray-200 rounded-lg p-4 font-sans"
-                            placeholder="e.g. Painting, Digital"
+                            placeholder="e.g. Painting, Digital, Drawing, Sculpture, Water Painting, Sketch"
                             value={category}
                             onChangeText={setCategory}
                         />

@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "Art Bloom",
-    "slug": "mobile",
+    "slug": "artbloom-mobile",
+    "owner": "asif_shaik",
     "scheme": "artbloom",
     "version": "1.0.0",
     "orientation": "portrait",
