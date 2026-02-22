@@ -11,10 +11,17 @@ const RegisterScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [showTerms, setShowTerms] = useState(false);
     const { register, googleLogin, loading } = useAuth();
     const navigation = useNavigation();
 
     const handleRegister = async () => {
+        if (!agreedToTerms) {
+            Alert.alert('Terms Required', 'Please agree to the Terms & Conditions to continue.');
+            return;
+        }
+
         if (!name || !email || !password || !confirmPassword || !username) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
@@ -114,6 +121,23 @@ const RegisterScreen = () => {
                              <Text className="text-gray-500">Or continue with</Text>
                         </View>
 
+                        {/* Terms and Conditions Checkbox */}
+                        <View className="flex-row items-start mb-4 px-1">
+                            <TouchableOpacity 
+                                onPress={() => setAgreedToTerms(!agreedToTerms)}
+                                className="mr-3 pt-1"
+                            >
+                                <View className={`w-6 h-6 border-2 rounded ${agreedToTerms ? 'bg-artbloom-peach border-artbloom-peach' : 'border-gray-300'} items-center justify-center`}>
+                                    {agreedToTerms && <Text className="text-white text-xs font-bold">✓</Text>}
+                                </View>
+                            </TouchableOpacity>
+                            <View className="flex-1">
+                                <Text className="text-gray-600 text-sm">
+                                    I agree to the <Text className="font-bold text-artbloom-peach" onPress={() => setShowTerms(true)}>Terms & Conditions</Text>.
+                                </Text>
+                            </View>
+                        </View>
+
                         <TouchableOpacity
                             className="bg-white border border-gray-200 py-4 rounded-lg flex-row justify-center items-center active:opacity-80"
                             onPress={async () => {
@@ -148,6 +172,47 @@ const RegisterScreen = () => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+             {/* Terms Modal */}
+            {showTerms && (
+                <View className="absolute inset-0 bg-black/50 justify-center items-center p-4 z-50">
+                    <View className="bg-white p-6 rounded-xl w-full max-h-[80%]">
+                        <Text className="text-xl font-bold font-playfair mb-4 text-center">Terms & Conditions</Text>
+                        <ScrollView className="mb-4">
+                            <Text className="text-gray-700 mb-2 font-bold">1. Purpose</Text>
+                            <Text className="text-gray-600 mb-4">
+                                This is an art exhibition platform, not a complete e-commerce platform. We support artists and their hard work.
+                            </Text>
+
+                            <Text className="text-gray-700 mb-2 font-bold">2. Upload Rules</Text>
+                            <Text className="text-gray-600 mb-4">
+                                - No nudity, 18+ content, violence, or sensitive imagery.{"\n"}
+                                - This platform is for peace and appreciating art.
+                            </Text>
+
+                            <Text className="text-gray-700 mb-2 font-bold">3. Violations</Text>
+                            <Text className="text-gray-600 mb-4">
+                                Violation of rules will lead to a permanent ban. Hate speech and offensive usernames are not tolerated.
+                            </Text>
+                            
+                            <Text className="text-gray-700 mb-2 font-bold">4. Community</Text>
+                            <Text className="text-gray-600 mb-4">
+                                This app is for everyone, from children to parents. Please maintain dignity and keep the platform clean.
+                            </Text>
+
+                            <Text className="text-gray-600 italic mt-4 text-center">
+                                Thank you for using Art Bloom.{"\n"}- Rohini Sai, Asif Shaik
+                            </Text>
+                        </ScrollView>
+                        <TouchableOpacity 
+                            className="bg-artbloom-peach p-3 rounded-lg items-center"
+                            onPress={() => setShowTerms(false)}
+                        >
+                            <Text className="text-white font-bold">Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
         </SafeAreaView>
     );
 };

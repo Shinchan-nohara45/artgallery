@@ -59,6 +59,19 @@ const createArtwork = asyncHandler(async (req, res) => {
     throw new Error("Artwork image is required.");
   }
 
+  // Check upload limit (Max 3 per user)
+  const artworkCount = await Artwork.countDocuments({ artist: req.user._id });
+  if (artworkCount >= 3) {
+      // Clean up local file if it exists, since we reject the upload
+      if (req.file) {
+          fs.unlink(req.file.path, (err) => {
+              if (err) console.error("Error deleting local file:", err);
+          });
+      }
+      res.status(400);
+      throw new Error("Upload limit reached. You can only upload a maximum of 3 artworks.");
+  }
+
   // Upload to Cloudinary
   let cloudinaryResult;
   try {

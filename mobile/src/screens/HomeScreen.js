@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, FlatList, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, FlatList, Dimensions, Animated } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
+import ImageViewing from "react-native-image-viewing";
 
 const { width } = Dimensions.get('window');
 
@@ -28,15 +29,15 @@ const CAROUSEL_IMAGES = [
   },
 ];
 
-import ImageViewing from "react-native-image-viewing";
-
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [featuredArtworks, setFeaturedArtworks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0);
   const [values, setValues] = useState({ isVisible: false, index: 0 }); // State for lightbox
   const flatListRef = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     fetchFeaturedArtworks();
@@ -64,22 +65,13 @@ const HomeScreen = () => {
       
       if (data && data.artworks) {
         // Just taking the first 4 as featured. 
-        // Yes, newly uploaded artworks will appear here if the backend returns them in the list.
         setFeaturedArtworks(data.artworks.slice(0, 4));
       } else {
         console.warn('No artworks data received:', data);
         setFeaturedArtworks([]);
       }
     } catch (error) {
-      console.error('Error fetching artworks:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-      } else {
-        console.error('Error message:', error.message);
-      }
+       console.error('Error fetching artworks:', error);
     } finally {
       setLoading(false);
     }
@@ -115,16 +107,49 @@ const HomeScreen = () => {
     }
   }).current;
 
-  return (
-    <SafeAreaView className="flex-1 bg-artbloom-cream" edges={['top']}>
-        {/* Header - Left Aligned, Cursive, White BG */}
-        <View className="bg-white pt-4 pb-4 px-6 border-b border-gray-50 shadow-sm z-10">
-            <Text className="font-playfair italic font-bold text-3xl text-artbloom-charcoal">
-                Art Bloom
-            </Text>
-        </View>
+  const headerBgColor = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 1)'],
+    extrapolate: 'clamp',
+  });
 
-      <ScrollView>
+  const headerBorderColor = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['rgba(243, 244, 246, 0)', 'rgba(243, 244, 246, 1)'],
+    extrapolate: 'clamp',
+  });
+
+    return (
+    <View className="flex-1 bg-artbloom-cream">
+        {/* Animated Sticky Header */}
+        {!values.isVisible && (
+            <Animated.View 
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 50,
+                    backgroundColor: headerBgColor,
+                    borderBottomWidth: 1,
+                    borderBottomColor: headerBorderColor,
+                    paddingTop: insets.top + 10,
+                    paddingBottom: 16,
+                    alignItems: 'center'
+                }}
+            >
+                <Text className="text-2xl font-playfair font-bold text-artbloom-charcoal">Art Bloom</Text>
+            </Animated.View>
+        )}
+        
+      <Animated.ScrollView
+        onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        bounces={false}
+      >
         {/* Hero Carousel */}
         <View className="h-96 relative">
           <FlatList
@@ -227,8 +252,8 @@ const HomeScreen = () => {
             </View>
           )}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </Animated.ScrollView>
+    </View>
   );
 };
 

@@ -60,9 +60,13 @@ const DiscoverScreen = () => {
             by {item.artist?.username ? `@${item.artist.username}` : (item.artist?.name || 'Unknown')}
         </Text>
         <View className="flex-row justify-between items-center">
-            <Text className="font-bold text-artbloom-peach text-lg">${item.price}</Text>
+            {['digital_art', 'photography', 'drawing', 'Water Painting'].includes(item.category) || parseFloat(item.price) === 0 ? (
+                <Text className="font-bold text-gray-400 text-base italic">Free</Text>
+            ) : (
+                <Text className="font-bold text-artbloom-peach text-lg">${item.price}</Text>
+            )}
             <View className="bg-artbloom-clay/20 px-2 py-1 rounded">
-                <Text className="text-xs text-artbloom-charcoal">{item.category}</Text>
+                <Text className="text-xs text-artbloom-charcoal">{item.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</Text>
             </View>
         </View>
       </View>

@@ -119,7 +119,13 @@ const EditProfileScreen = () => {
         } catch (error) {
             console.error('Update Error:', error);
             const message = error.response?.data?.message || 'Failed to update profile';
-            Alert.alert('Error', message);
+            
+            // Check for specific 14-day limit error message
+            if (message.includes('14 days')) {
+                 Alert.alert('Update Limit Reached', message);
+            } else {
+                 Alert.alert('Error', message);
+            }
         } finally {
             setLoading(false);
         }

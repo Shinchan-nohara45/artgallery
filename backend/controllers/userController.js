@@ -70,9 +70,22 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
         // Handle profile image upload if present
         if (req.file) {
+            // Check 14-day limit
+            if (user.lastProfileImageUpdate) {
+                const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+                if (user.lastProfileImageUpdate > fourteenDaysAgo) {
+                    res.status(400);
+                    // Calculate days remaining
+                    const nextUpdate = new Date(user.lastProfileImageUpdate.getTime() + 14 * 24 * 60 * 60 * 1000);
+                    const daysRemaining = Math.ceil((nextUpdate - Date.now()) / (1000 * 60 * 60 * 24));
+                    throw new Error(`Profile picture can only be updated once every 14 days. Please try again in ${daysRemaining} days.`);
+                }
+            }
+
             try {
                 const result = await uploadImageToCloudinary(req.file.path, 'user_profiles');
                 user.imageUrl = result.secure_url;
+                user.lastProfileImageUpdate = Date.now();
             } catch (error) {
                 console.error('Cloudinary upload error:', error);
                 res.status(500);
@@ -103,7 +116,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 import Notification from '../models/Notification.js';
 import Artwork from '../models/Artwork.js'; // Need this for aggregation
 
-// @desc    Get all users (Public - featured > 2 artworks OR search)
+// @desc    Get all users (Public - featured >= 2 artworks OR search)
 // @route   GET /api/users/public
 // @access  Public
 const getPublicUsers = asyncHandler(async (req, res) => {
@@ -123,8 +136,8 @@ const getPublicUsers = asyncHandler(async (req, res) => {
         return;
     }
 
-    // Default: Featured Artists (uploaded > 2 artworks)
-    // Find users who have uploaded more than 2 artworks
+    // Default: Featured Artists (uploaded >= 2 artworks)
+    // Find users who have uploaded 2 or more artworks
     // We can do this by aggregating Artworks grouped by artist
     
     const featuredArtists = await Artwork.aggregate([
@@ -136,7 +149,7 @@ const getPublicUsers = asyncHandler(async (req, res) => {
         },
         {
             $match: {
-                count: { $gt: 2 }
+                count: { $gte: 2 }
             }
         }
     ]);

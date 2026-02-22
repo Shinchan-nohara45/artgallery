@@ -8,12 +8,15 @@ import { API_URL } from '../constants/config';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
+import ImageViewing from "react-native-image-viewing";
+
 const ArtworkDetailScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const { id } = route.params;
     const [artwork, setArtwork] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isLightboxVisible, setIsLightboxVisible] = useState(false);
     const { addToCart, cartItems } = useCart();
 
     useEffect(() => {
@@ -72,8 +75,6 @@ const ArtworkDetailScreen = () => {
             Alert.alert('Error', 'Failed to update favorite status');
         }
     };
-
-    // const { addToCart, cartItems } = useCart(); // Get cartItems (Removed duplicate)
     
     // Check if item is already in cart
     const isInCart = cartItems.some(item => item._id === id);
@@ -87,20 +88,6 @@ const ArtworkDetailScreen = () => {
         }
     };
 
-    // ... (render)
-
-            <View className="p-4 bg-white shadow-lg border-t border-gray-100">
-                <TouchableOpacity 
-                    className={`flex-row items-center justify-center py-4 rounded-xl active:opacity-90 ${isInCart ? 'bg-[#D4AF37]' : 'bg-artbloom-peach'}`}
-                    onPress={handleCartAction}
-                >
-                    <ShoppingCart color="white" size={20} className="mr-2" />
-                    <Text className="text-white font-bold text-lg ml-2">
-                        {isInCart ? 'Go to Cart' : 'Add to Cart'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-
     if (loading) {
         return <View className="flex-1 items-center justify-center bg-artbloom-cream"><ActivityIndicator size="large" color="#F2A684" /></View>;
     }
@@ -108,43 +95,59 @@ const ArtworkDetailScreen = () => {
     if (!artwork) {
         return <View className="flex-1 items-center justify-center bg-artbloom-cream"><Text>Artwork not found</Text></View>;
     }
+    
+    const isFree = ['digital_art', 'photography', 'drawing', 'Water Painting'].includes(artwork.category) || parseFloat(artwork.price) === 0;
 
     return (
-        <SafeAreaView className="flex-1 bg-artbloom-cream relative">
-            <View className="absolute top-12 left-4 z-10 flex-row justify-between w-full px-4">
-                <TouchableOpacity 
-                    onPress={() => navigation.goBack()}
-                    className="bg-white/80 p-2 rounded-full"
-                >
-                     <ArrowLeft color="#2C2C2C" size={24} />
-                </TouchableOpacity>
+        <View className="flex-1 bg-artbloom-cream">
+            {!isLightboxVisible && (
+                <SafeAreaView className="absolute top-0 left-0 right-0 z-10" edges={['top']}>
+                    <View className="flex-row justify-between w-full px-4 pt-2">
+                        <TouchableOpacity 
+                            onPress={() => navigation.goBack()}
+                            className="bg-white p-3 rounded-full shadow-md items-center justify-center border border-gray-100"
+                        >
+                             <ArrowLeft color="#2C2C2C" size={20} />
+                        </TouchableOpacity>
 
-                <TouchableOpacity 
-                    onPress={toggleFavorite}
-                    className="bg-white/80 p-2 rounded-full"
-                >
-                     <Heart 
-                        color={isFavorite ? "#EF4444" : "#2C2C2C"} 
-                        fill={isFavorite ? "#EF4444" : "transparent"} 
-                        size={24} 
-                     />
-                </TouchableOpacity>
-            </View>
+                        <TouchableOpacity 
+                            onPress={toggleFavorite}
+                            className="bg-white p-3 rounded-full shadow-md items-center justify-center border border-gray-100"
+                        >
+                             <Heart 
+                                color={isFavorite ? "#EF4444" : "#2C2C2C"} 
+                                fill={isFavorite ? "#EF4444" : "transparent"} 
+                                size={20} 
+                             />
+                        </TouchableOpacity>
+                    </View>
+                </SafeAreaView>
+            )}
 
-            <ScrollView>
-                <Image 
-                    source={{ uri: artwork.imageUrl }} 
-                    className="w-full h-96"
-                    resizeMode="cover"
-                />
+            <ScrollView className="bg-artbloom-cream" bounces={false} showsVerticalScrollIndicator={false}>
+                <View className="w-full pt-10 pb-4">
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => setIsLightboxVisible(true)}>
+                        <Image 
+                            source={{ uri: artwork.imageUrl }} 
+                            className="w-full h-[400px]"
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
+                </View>
                 
-                <View className="p-6 bg-artbloom-cream -mt-6 rounded-t-3xl shadow-lg h-full">
-                    <View className="flex-row justify-between items-start mb-4">
-                        <View className="flex-1">
+                <View className="p-6 bg-artbloom-cream -mt-8 rounded-t-[32px] shadow-sm pb-12">
+                    <View className="flex-row justify-between items-start mb-6">
+                        <View className="flex-1 pr-4">
                             <Text className="text-3xl font-playfair font-bold text-artbloom-charcoal mb-1">{artwork.title}</Text>
                             <Text className="text-artbloom-charcoal/70 text-lg">by {artwork.artist?.name || 'Unknown Artist'}</Text>
                         </View>
-                        <Text className="text-2xl font-bold text-artbloom-peach">${artwork.price}</Text>
+                        <View className="flex-shrink-0 items-end">
+                            {isFree ? (
+                                <Text className="text-xl font-bold text-gray-400 italic mt-1">Free</Text>
+                            ) : (
+                                <Text className="text-3xl font-bold text-artbloom-peach mt-1">${artwork.price}</Text>
+                            )}
+                        </View>
                     </View>
 
                     <View className="border-t border-gray-200 py-4 mb-4">
@@ -152,31 +155,58 @@ const ArtworkDetailScreen = () => {
                         <Text className="text-gray-600 leading-6">{artwork.description}</Text>
                     </View>
 
-                    <View className="flex-row justify-between items-center mb-6">
+                    <View className="flex-row justify-between items-center mb-6 mt-2">
                         <View>
                             <Text className="text-gray-500 text-xs">Category</Text>
-                            <Text className="font-medium text-artbloom-charcoal">{artwork.category}</Text>
+                            <Text className="font-medium text-artbloom-charcoal capitalize">{artwork.category.replace(/_/g, ' ')}</Text>
                         </View>
-                        <View>
-                            <Text className="text-gray-500 text-xs">Stock</Text>
-                            <Text className="font-medium text-artbloom-charcoal">{artwork.stock > 0 ? 'In Stock' : 'Sold Out'}</Text>
-                        </View>
+                        {!isFree && (
+                            <View>
+                                <Text className="text-gray-500 text-xs">Stock</Text>
+                                <Text className="font-medium text-artbloom-charcoal">{artwork.stock > 0 ? 'In Stock' : 'Sold Out'}</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
             </ScrollView>
+            
+            <ImageViewing
+                images={[{ uri: artwork.imageUrl }]}
+                imageIndex={0}
+                visible={isLightboxVisible}
+                onRequestClose={() => setIsLightboxVisible(false)}
+            />
 
-            <View className="p-4 bg-white shadow-lg border-t border-gray-100">
-                <TouchableOpacity 
-                    className={`flex-row items-center justify-center py-4 rounded-xl active:opacity-90 ${isInCart ? 'bg-green-500' : 'bg-artbloom-peach'}`}
-                    onPress={handleCartAction}
-                >
-                    <ShoppingCart color="white" size={20} className="mr-2" />
-                    <Text className="text-white font-bold text-lg ml-2">
-                         {isInCart ? 'Go to Cart' : 'Add to Cart'}
-                    </Text>
-                </TouchableOpacity>
+            <View className="p-4 bg-white shadow-lg border-t border-gray-100 flex-row justify-between">
+                {isFree ? (
+                    <TouchableOpacity 
+                        className="flex-1 flex-row items-center justify-center py-4 rounded-xl bg-artbloom-peach active:opacity-90"
+                        onPress={() => setIsLightboxVisible(true)}
+                    >
+                        <Text className="text-white font-bold text-lg">View Artwork</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <>
+                        <TouchableOpacity 
+                            className="flex-[0.8] flex-row items-center justify-center py-4 rounded-xl bg-white border border-gray-200 active:opacity-90 mr-3 shadow-sm"
+                            onPress={() => setIsLightboxVisible(true)}
+                        >
+                            <Text className="text-artbloom-charcoal font-bold text-lg">View</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            className={`flex-[1.2] flex-row items-center justify-center py-4 rounded-xl active:opacity-90 ${isInCart ? 'bg-green-500' : 'bg-artbloom-peach'}`}
+                            onPress={handleCartAction}
+                        >
+                            <ShoppingCart color="white" size={20} className="mr-2" />
+                            <Text className="text-white font-bold text-lg ml-2">
+                                {isInCart ? 'Go to Cart' : 'Add to Cart'}
+                            </Text>
+                        </TouchableOpacity>
+                    </>
+                )}
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 
