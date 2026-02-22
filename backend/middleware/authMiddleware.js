@@ -8,28 +8,16 @@ const require = createRequire(import.meta.url);
 
 let serviceAccount;
 try {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-    // Best option for Render: Paste the entire serviceAccountKey.json encoded as Base64.
-    // This perfectly preserves all newlines, quotes, and JSON structure.
-    const decodedBuffer = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64');
-    serviceAccount = JSON.parse(decodedBuffer.toString('utf-8'));
-  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    // Try to parse the full JSON string
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  } else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-    // Alternatively, construct it from individual environment variables
-    // Render often escapes newlines in env vars. This line ensures all permutations of \n decode to true newlines.
-    const rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
-    // Also remove literal \r if present
-    const formattedKey = rawKey.replace(/\\n/g, '\n').replace(/"/g, '').replace(/\\r/g, '');
-    
+  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+    // Render Deployment
     serviceAccount = {
       project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key: formattedKey,
+      // Render dashboard inputs escape newlines, this converts them back to real newlines for Firebase PEM parsing
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       client_email: process.env.FIREBASE_CLIENT_EMAIL,
     };
   } else {
-    // Fallback to local file
+    // Local Development
     serviceAccount = require("../serviceAccountKey.json");
   }
 } catch (error) {
