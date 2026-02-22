@@ -9,14 +9,22 @@ const require = createRequire(import.meta.url);
 let serviceAccount;
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    // Try to parse the full JSON string
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+    // Alternatively, construct it from individual environment variables
+    serviceAccount = {
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    };
   } else {
+    // Fallback to local file
     serviceAccount = require("../serviceAccountKey.json");
   }
 } catch (error) {
   console.error("Firebase Service Account Setup Error:", error.message);
-  // We cannot proceed without credentials, but throwing here gives a better log than MODULE_NOT_FOUND
-  throw new Error("Missing Firebase Credentials! Set FIREBASE_SERVICE_ACCOUNT env var or provide 'backend/serviceAccountKey.json'.");
+  throw new Error("Missing Firebase Credentials! Set FIREBASE_SERVICE_ACCOUNT env var or provide individual FIREBASE_ variables or 'backend/serviceAccountKey.json'.");
 }
 
 // Initialize Firebase Admin SDK
