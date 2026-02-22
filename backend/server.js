@@ -42,6 +42,11 @@ app.use((req, res, next) => {
 // Make uploads folder static
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Uptime Check Route (For Render & cron-job.org)
+app.get('/', (req, res) => {
+  res.status(200).json({ status: "success", message: "ArtBloom API is running normally." });
+});
+
 // Routes
 app.use("/api/artworks", artworksRoute);
 app.use("/api/auth", authRoutes);
